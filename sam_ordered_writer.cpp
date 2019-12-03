@@ -49,7 +49,7 @@ SAMOrderedWriter::SAMOrderedWriter(std::string output_sam_file_name, int32_t _wi
         else if (str_ends_with(file_name, ".ubam"))
         {
             kputs("bu", &mode);
-        }	
+        }
         else if (str_ends_with(file_name, ".cram"))
         {
             kputs("c", &mode);
@@ -135,7 +135,7 @@ void SAMOrderedWriter::write(bam1_t *v)
 
                 if (i==buffer.end())
                 {
-                    int64_t cutoff_pos1 =  std::max(bam_get_pos1(buffer.front())-window,static_cast<hts_pos_t>(1));
+                    int64_t cutoff_pos1 = bam_get_pos1(buffer.front())-window; //fixed compile issue
                     if (bam_get_pos1(v)<cutoff_pos1)
                     {
 		      notice("[%s:%d %s] Might not be sorted for window size %d at current record %s:%d < %d (%d [last record] - %d), please increase window size to at least %d.\n", __FILE__,__LINE__,__FUNCTION__, window, bam_get_chrom(hdr, v), bam_get_pos1(v), cutoff_pos1, bam_get_pos1(buffer.front()), window, bam_get_pos1(buffer.front())-bam_get_pos1(v)+1);
@@ -162,7 +162,7 @@ void SAMOrderedWriter::write(bam1_t *v)
     {
       if ( sam_write1(file, hdr, v) < 0 ) {
 	error("[E:%s:%d %s] Cannot write the header file", __FILE__, __LINE__, __PRETTY_FUNCTION__);
-      }      
+      }
     }
 }
 
@@ -211,19 +211,19 @@ void SAMOrderedWriter::flush(bool force) {
     while (!buffer.empty()) {
       if ( sam_write1(file, hdr, buffer.back()) < 0 ) {
 	  error("[E:%s:%d %s] Cannot write the record", __FILE__, __LINE__, __PRETTY_FUNCTION__);
-      }            
+      }
       store_bam1_into_pool(buffer.back());
       buffer.pop_back();
     }
   }
   else {
     if (buffer.size()>1) {
-      int64_t cutoff_pos1 =  std::max(bam_get_pos1(buffer.front())-window,static_cast<hts_pos_t>(1));
-      
+      int64_t cutoff_pos1 = bam_get_pos1(buffer.front())-window; //fixed compile issue
+
       while (buffer.size()>1) {
 	if (bam_get_pos1(buffer.back())<=cutoff_pos1) {
 	  if ( sam_write1(file, hdr, buffer.back()) < 0 ) {
-	    error("[E:%s:%d %s] Cannot write the record", __FILE__, __LINE__, __PRETTY_FUNCTION__);	    
+	    error("[E:%s:%d %s] Cannot write the record", __FILE__, __LINE__, __PRETTY_FUNCTION__);
 	  }
 	  store_bam1_into_pool(buffer.back());
 	  buffer.pop_back();

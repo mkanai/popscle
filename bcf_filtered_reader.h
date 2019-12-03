@@ -41,22 +41,22 @@ public:
   int32_t yRid;
   int32_t mtRid;
   int8_t sex_ploidies[2];
-  
+
   int32_t unit;
 
   //bool jumping_extract; // not used yet
   int32_t max_jumping_distance; // not used yet
-  
+
   bcf_vfilter_arg vfilt;
   bcf_gfilter_arg gfilt;
-  
+
   int32_t verbose;
 
   // internal arguments irrelevant to initial parameters
   bool mode_extract;
   std::set<variantKeyS> variants2extract;
   genomeLoci target_loci;
-  
+
   int32_t nRead;
   int32_t nSkip;
   int32_t nMiss;
@@ -68,7 +68,7 @@ public:
   bool eof;
 
   BCFChunkedReader cdr;
-  
+
   int32_t* gts;
   int32_t n_gts;
   int32_t* pls;
@@ -80,7 +80,7 @@ public:
   void* flds;
   int32_t n_flds;
   int8_t* ploidies;
-  
+
   std::vector<double> acs;
   int32_t an;
 
@@ -108,7 +108,7 @@ public:
   // initialization function
   void init_params();
 
-  // buffer management 
+  // buffer management
   void set_buffer_size(int32_t buffer_size);
   inline bcf1_t* cursor() { return vbufs[vidx]; }
   inline bcf1_t* cursor(int32_t idx) {
@@ -117,9 +117,9 @@ public:
     }
     else {
       error("[E:%s:%d %s] Cannot move cursor to %d-th variant, which is out of bound from %d", __FILE__, __LINE__, __PRETTY_FUNCTION__, idx, nbuf);
-      return 0;      
+      return 0;
     }
-  }  
+  }
   bcf1_t* read();
   void pop() { --nbuf; }
   int32_t clear_buffer_before(const char* chr = NULL, int32_t pos1 = INT_MAX);
@@ -134,7 +134,7 @@ public:
   // parse contents
   bool parse_genotypes(bcf_hdr_t* hdr=NULL, bcf1_t* v=NULL);
   bool parse_likelihoods(bcf_hdr_t* hdr=NULL, bcf1_t* v=NULL, const char* name = "PL");
-  bool parse_posteriors(bcf_hdr_t* hdr=NULL, bcf1_t* v=NULL, const char* name = "GP", double gt_error_offset = 1e-4);  
+  bool parse_posteriors(bcf_hdr_t* hdr=NULL, bcf1_t* v=NULL, const char* name = "GP", double gt_error_offset = 1e-4);
   bool parse_dosages(bcf_hdr_t* hdr=NULL, bcf1_t* v=NULL, const char* name = "DS");
   bool parse_int_fields(const char* name, bcf_hdr_t* hdr=NULL, bcf1_t* v=NULL);
   bool parse_float_fields(const char* name, bcf_hdr_t* hdr=NULL, bcf1_t* v=NULL);
@@ -163,7 +163,7 @@ public:
   inline float get_posterior_at(int32_t i, int32_t ngenotypes = 3) {
     return gps[sm_icols[i/ngenotypes]*ngenotypes + (i % ngenotypes)];
   }
-  
+
   inline float get_dosage_at(int32_t i, int32_t nalleles = 2) {
     return dss[sm_icols[i/(nalleles-1)]+i%(nalleles-1)];
   }

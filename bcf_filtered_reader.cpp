@@ -3,14 +3,14 @@
 void BCFFilteredReader::init_params() {
   if ( bcf_file_name.empty() )
     error("[%s:%d %s] bcf_file_name is empty", __FILE__, __LINE__, __PRETTY_FUNCTION__);
-    
+
   if ( !target_interval_list.empty() ) {
     // stat processing the target region
     genomeLocus* tmp_target_locus = NULL;
     if ( !target_region.empty() ) {
       tmp_target_locus = new genomeLocus(target_region.c_str());
     }
-    
+
     tsv_reader tsv_interval(target_interval_list.c_str());
     while( tsv_interval.read_line() ) {
       if ( tsv_interval.nfields < 3 )
@@ -62,7 +62,7 @@ void BCFFilteredReader::init_params() {
 	sex = 2;
       }
       else if ( ( sex < 0 ) || ( sex > 2 ) ) {
-	error("[E:%s:%d %s] Unknown sex %d for %s in %s", __FILE__, __LINE__, __PRETTY_FUNCTION__, sex, id.c_str(), sexMap.c_str());	
+	error("[E:%s:%d %s] Unknown sex %d for %s in %s", __FILE__, __LINE__, __PRETTY_FUNCTION__, sex, id.c_str(), sexMap.c_str());
       }
       mSex[id] = (sex == 1 ? 1 : 0);
     }
@@ -74,18 +74,18 @@ void BCFFilteredReader::init_params() {
   ////////////////////////////////////////
   if ( bcf_file_name.find(GENOME_CHUNK_SEP_CHR) == std::string::npos ) {
     // chunk is not necessary
-    if ( ( !ref_file_name.empty() ) || ( !interval_file_name.empty() ) ) 
+    if ( ( !ref_file_name.empty() ) || ( !interval_file_name.empty() ) )
       warning("[W:%s:%d %s] ref_file_name or interval_file_name is used but will be ignored because chunking is not necessary. Use %s in the filename if you intended chunking the file", __FILE__, __LINE__, __PRETTY_FUNCTION__, GENOME_CHUNK_SEP_CHR);
     cdr.init(bcf_file_name.c_str(), NULL, NULL, INT_MAX, target_loci.empty() ? NULL : &target_loci);
   }
   else if ( !ref_file_name.empty() ) {
-    if ( !interval_file_name.empty() ) 
+    if ( !interval_file_name.empty() )
       warning("[W:%s:%d %s] interval_file_name is used but will be ignored because ref_file_name is provided. Do not use ref_file_name if you intended chunking by the interval", __FILE__, __LINE__, __PRETTY_FUNCTION__, GENOME_CHUNK_SEP_CHR);
-    
+
     cdr.init(bcf_file_name.c_str(), ref_file_name.c_str(), NULL, unit, target_loci.empty() ? NULL : &target_loci);
   }
   else if ( !interval_file_name.empty() ) {
-    cdr.init(bcf_file_name.c_str(), NULL, interval_file_name.c_str(), INT_MAX, target_loci.empty() ? NULL : &target_loci);    
+    cdr.init(bcf_file_name.c_str(), NULL, interval_file_name.c_str(), INT_MAX, target_loci.empty() ? NULL : &target_loci);
   }
 
   // default buffer size is 1
@@ -127,7 +127,7 @@ void BCFFilteredReader::init_params() {
     int32_t nsamples = bcf_hdr_nsamples(cdr.hdr);
     for(int32_t i=0; i < nsamples; ++i) {
       sm_icols.push_back(i);
-      v_sm_ids.push_back(bcf_hdr_sample_id(cdr.hdr,i));      
+      v_sm_ids.push_back(bcf_hdr_sample_id(cdr.hdr,i));
       if ( !mSex.empty() ) {
 	std::string id(bcf_hdr_sample_id(cdr.hdr, i));
 	if ( mSex.find(id) == mSex.end() )
@@ -135,7 +135,7 @@ void BCFFilteredReader::init_params() {
 	sm_isexes.push_back(mSex[id]);
       }
       else {
-	sm_isexes.push_back(0);	
+	sm_isexes.push_back(0);
       }
     }
   }
@@ -152,8 +152,8 @@ void BCFFilteredReader::init_params() {
   xRid  = bcf_hdr_name2id(cdr.hdr, xLabel.c_str());
   yRid  = bcf_hdr_name2id(cdr.hdr, yLabel.c_str());
   mtRid = bcf_hdr_name2id(cdr.hdr, mtLabel.c_str());
-  
-  if ( sm_icols.size() > 0 ) { 
+
+  if ( sm_icols.size() > 0 ) {
     ploidies = new int8_t[sm_isexes.size()];
     memset(ploidies, (int8_t)2, (int32_t)sm_isexes.size());
   }
@@ -169,19 +169,19 @@ void BCFFilteredReader::set_buffer_size(int32_t new_buffer_size) {
   }
   else if ( new_buffer_size == (int32_t)vbufs.size() ) return;
 
-  std::vector<bcf1_t*> new_vbufs;  
+  std::vector<bcf1_t*> new_vbufs;
   if ( new_buffer_size > (int32_t)vbufs.size() ) {
     // copy everything and add some empty ones at the beginning
     for(int32_t i=0; i < new_buffer_size-(int32_t)vbufs.size(); ++i)
       new_vbufs.push_back(bcf_init());
     for(int32_t i=0; i < (int32_t)vbufs.size(); ++i) {
-      new_vbufs.push_back(vbufs[(vidx+1+i) % vbufs.size()]);      
+      new_vbufs.push_back(vbufs[(vidx+1+i) % vbufs.size()]);
     }
   }
   else {
     for(int32_t i=0; i < (int32_t)vbufs.size()-new_buffer_size; ++i)
       bcf_destroy(vbufs[(vidx+1+i) % vbufs.size()]);
-    
+
     for(int32_t i=(int32_t)vbufs.size()-new_buffer_size; i < (int32_t)vbufs.size(); ++i)
       new_vbufs.push_back(vbufs[(vidx+1+i) % vbufs.size()]);
   }
@@ -198,49 +198,51 @@ bool BCFFilteredReader::parse_genotypes(bcf_hdr_t* hdr, bcf1_t* v) {
   //notice("Parsing genotypes at %s:%d:%s:%s", bcf_hdr_id2name(hdr,v->rid), v->pos+1, v->d.allele[0], v->d.allele[1]);
 
   if ( bcf_get_genotypes(hdr, v, &gts, &n_gts) < 0 ) {
-    notice("Failed to parsing genotypes at %s:%d:%s:%s", bcf_hdr_id2name(hdr,v->rid), v->pos+1, v->d.allele[0], v->d.allele[1]);    
+    notice("Failed to parsing genotypes at %s:%d:%s:%s", bcf_hdr_id2name(hdr,v->rid), v->pos+1, v->d.allele[0], v->d.allele[1]);
     return false;
   }
   int32_t nsamples = bcf_hdr_nsamples(cdr.hdr);
   acs.resize(v->n_allele);
   std::fill(acs.begin(), acs.end(), 0);
   an = 0;
-  
+
   if ( gfilt.minDP > 0 ) {
     if ( !parse_int_fields("DP",hdr,v) ) {
-	error("[E:%s:%d %s] Cannot find the field DP from the VCF file at position %s:%d",__FILE__,__LINE__,__PRETTY_FUNCTION__, bcf_hdr_id2name(hdr, v->rid), v->pos+1);      
+	error("[E:%s:%d %s] Cannot find the field DP from the VCF file at position %s:%d",__FILE__,__LINE__,__PRETTY_FUNCTION__, bcf_hdr_id2name(hdr, v->rid), v->pos+1);
     }
     const int32_t* iflds = (const int32_t*)flds;
     for(int32_t i=0; i < nsamples; ++i) {
       if ( iflds[i] < gfilt.minDP ) {
 	gts[2*i] = bcf_gt_missing;
-	gts[2*i+1] = bcf_gt_missing;	    
+	gts[2*i+1] = bcf_gt_missing;
       }
-    }      
+    }
   }
 
   if ( gfilt.minGQ > 0 ) {
     if ( !parse_int_fields("GQ",hdr,v) ) {
-	error("[E:%s:%d %s] Cannot find the field DP from the VCF file at position %s:%d",__FILE__,__LINE__,__PRETTY_FUNCTION__, bcf_hdr_id2name(hdr, v->rid), v->pos+1);      
+	error("[E:%s:%d %s] Cannot find the field DP from the VCF file at position %s:%d",__FILE__,__LINE__,__PRETTY_FUNCTION__, bcf_hdr_id2name(hdr, v->rid), v->pos+1);
     }
     const int32_t* iflds = (const int32_t*)flds;
     for(int32_t i=0; i < nsamples; ++i) {
       if ( iflds[i] < gfilt.minGQ ) {
 	gts[2*i] = bcf_gt_missing;
-	gts[2*i+1] = bcf_gt_missing;	    
+	gts[2*i+1] = bcf_gt_missing;
       }
-    }      
+    }
   }
 
   // calculate allele count and allele balance for specified individuals
-  int32_t tmp_gt;
-  for(int32_t i=0; i < (int32_t)sm_icols.size(); ++i) {
-    for(int32_t j=0; j < 2; ++j) {
-      tmp_gt = gts[sm_icols[i]*2+j];
-      if ( ( j < ploidies[i] ) && ( bcf_gt_allele(tmp_gt) >= 0 ) ) {
-	//notice("%d %d %x %x", i, j, tmp_gt, bcf_gt_allele(tmp_gt));
-	++an;
-	++acs[bcf_gt_allele(tmp_gt)];
+  if(n_gts == nsamples*2){
+    int32_t tmp_gt;
+    for(int32_t i=0; i < (int32_t)sm_icols.size(); ++i) {
+      for(int32_t j=0; j < 2; ++j) {
+        tmp_gt = gts[sm_icols[i]*2+j];
+        if ( ( j < ploidies[i] ) && ( bcf_gt_allele(tmp_gt) >= 0 ) ) {
+  	//notice("%d %d %x %x", i, j, tmp_gt, bcf_gt_allele(tmp_gt));
+  	++an;
+  	++acs[bcf_gt_allele(tmp_gt)];
+        }
       }
     }
   }
@@ -265,11 +267,11 @@ bool BCFFilteredReader::parse_likelihoods(bcf_hdr_t* hdr, bcf1_t* v, const char*
   for(int32_t i=0; i < nalleles; ++i)
     acs[i] = 1.0/nalleles; // acs represents initial AF
   int32_t ngenos = (nalleles+1)*nalleles/2;
-  int32_t nsamples = bcf_hdr_nsamples(cdr.hdr);  
-  
+  int32_t nsamples = bcf_hdr_nsamples(cdr.hdr);
+
   gps = (nsamples > 0 ? (float*) realloc(gps, sizeof(float)*ngenos*nsamples) : NULL);
   n_gps = ngenos * nsamples; //sm_icols.size();
-    
+
   double* gp = ngenos > 0 ? new double[ngenos] : NULL;
   double sumgp;
   int32_t icol, i, j, k, l;
@@ -306,11 +308,11 @@ bool BCFFilteredReader::parse_likelihoods(bcf_hdr_t* hdr, bcf1_t* v, const char*
 	  l = (j+1)*(j+2)/2-1;
 	  gp[l] /= sumgp;
 	  newacs[j] += gp[l];
-	}	
+	}
 	++an;
       }
       if ( it + 1 == niter ) {
-	for(l=0; l < ngenos; ++l) 
+	for(l=0; l < ngenos; ++l)
 	  gps[icol+l] = (float)gp[l];
       }
     }
@@ -322,7 +324,7 @@ bool BCFFilteredReader::parse_likelihoods(bcf_hdr_t* hdr, bcf1_t* v, const char*
     acs[i] *= an;
 
   if ( gp ) delete[] gp;
-  
+
   return true;
 }
 
@@ -360,7 +362,7 @@ bool BCFFilteredReader::parse_dosages(bcf_hdr_t* hdr, bcf1_t* v, const char* nam
   }
   acs[0] = an;
   for(j=1; j < nalleles; ++j) acs[0] -= acs[j];
-  
+
   return true;
 }
 
@@ -368,7 +370,7 @@ bool BCFFilteredReader::parse_posteriors(bcf_hdr_t* hdr, bcf1_t* v, const char* 
   if ( hdr == NULL ) hdr = cdr.hdr;
   if ( v == NULL ) v = cursor();
 
-  //notice("Parsing posteriors at %s:%d:%s:%s, name=%s", bcf_hdr_id2name(hdr,v->rid), v->pos+1, v->d.allele[0], v->d.allele[1],name);  
+  //notice("Parsing posteriors at %s:%d:%s:%s, name=%s", bcf_hdr_id2name(hdr,v->rid), v->pos+1, v->d.allele[0], v->d.allele[1],name);
 
   bcf_unpack(v, BCF_UN_ALL);
 
@@ -376,15 +378,15 @@ bool BCFFilteredReader::parse_posteriors(bcf_hdr_t* hdr, bcf1_t* v, const char* 
     int32_t i, j, k, l, g, icol;
     int32_t nalleles = v->n_allele;
     int32_t ngenos = (nalleles+1)*nalleles/2;
-    int32_t nsamples = bcf_hdr_nsamples(cdr.hdr);    
-    //notice("Before parsing genotypes at %s:%d:%s:%s", bcf_hdr_id2name(hdr,v->rid), v->pos+1, v->d.allele[0], v->d.allele[1]);      
+    int32_t nsamples = bcf_hdr_nsamples(cdr.hdr);
+    //notice("Before parsing genotypes at %s:%d:%s:%s", bcf_hdr_id2name(hdr,v->rid), v->pos+1, v->d.allele[0], v->d.allele[1]);
     if ( !parse_genotypes(hdr, v) ) return false;
-    //notice("After parsing genotypes at %s:%d:%s:%s", bcf_hdr_id2name(hdr,v->rid), v->pos+1, v->d.allele[0], v->d.allele[1]);          
+    //notice("After parsing genotypes at %s:%d:%s:%s", bcf_hdr_id2name(hdr,v->rid), v->pos+1, v->d.allele[0], v->d.allele[1]);
     gps = ( nsamples > 0 ? (float*) realloc(gps, sizeof(float)*ngenos*nsamples) : NULL );
-    n_gps = nsamples * 3;    
+    n_gps = nsamples * 3;
     for(i=0; i < (int32_t)sm_icols.size(); ++i) {
       g = get_genotype_at(i);
-      icol = sm_icols[i]*ngenos;      
+      icol = sm_icols[i]*ngenos;
       if ( g < 0 ) { // missing genotype
 	if ( ploidies[i] == 2 ) {
 	  for(j=0, l=0; j < nalleles; ++j) {
@@ -450,12 +452,12 @@ bool BCFFilteredReader::parse_posteriors(bcf_hdr_t* hdr, bcf1_t* v, const char* 
 
     // second, account for genotyping error as weighted sum of GP and gpSums
     for(i=0; i < (int32_t)sm_icols.size(); ++i) {
-      icol = sm_icols[i]*ngenos;    
+      icol = sm_icols[i]*ngenos;
       for(j=0; j < ngenos; ++j) {
 	gps[icol+j] = ((1.0-gt_error)*gps[icol+j] + gt_error*gpSums[j]);
       }
     }
-    
+
     return true;
   }
 }
@@ -467,11 +469,11 @@ bool BCFFilteredReader::parse_int_fields(const char* name, bcf_hdr_t* hdr, bcf1_
   if ( v == NULL ) v = cursor();
 
   bcf_unpack(v, BCF_UN_ALL);
-  
-  if ( bcf_get_format_int32(hdr, v, name, &flds, &n_flds) < 0 ) {  
+
+  if ( bcf_get_format_int32(hdr, v, name, &flds, &n_flds) < 0 ) {
     return false;
   }
-  return true;  
+  return true;
 }
 
 bool BCFFilteredReader::parse_float_fields(const char* name, bcf_hdr_t* hdr, bcf1_t* v) {
@@ -479,11 +481,11 @@ bool BCFFilteredReader::parse_float_fields(const char* name, bcf_hdr_t* hdr, bcf
   if ( v == NULL ) v = cursor();
 
   bcf_unpack(v, BCF_UN_ALL);
-  
-  if ( bcf_get_format_float(hdr, v, name, &flds, &n_flds) < 0 ) {  
+
+  if ( bcf_get_format_float(hdr, v, name, &flds, &n_flds) < 0 ) {
     return false;
   }
-  return true;  
+  return true;
 }
 
 std::string& BCFFilteredReader::get_var_ID(bcf_hdr_t* hdr, bcf1_t* v) {
@@ -503,17 +505,17 @@ std::string& BCFFilteredReader::get_var_ID(bcf_hdr_t* hdr, bcf1_t* v) {
 }
 
 bool BCFFilteredReader::passed_vfilter(bcf_hdr_t* hdr, bcf1_t* v) {
-  if ( vfilt.probThin < 1 ) 
+  if ( vfilt.probThin < 1 )
     if ( rand()+0.5 > (RAND_MAX+1.0) * vfilt.probThin ) return false;
-  
+
   if ( hdr == NULL ) hdr = cdr.hdr;
   if ( v == NULL ) v = cursor();
 
   bool has_filter = vfilt.req_flt_ids.empty() ? true : false;
 
-  if ( ( has_filter ) && ( vfilt.filt == NULL ) && ( !vfilt.require_GT) ) 
+  if ( ( has_filter ) && ( vfilt.filt == NULL ) && ( !vfilt.require_GT) )
     return true;
-  
+
   bcf_unpack(v, BCF_UN_FLT);
   if ( !has_filter ) {
     for(int32_t i=0; i < v->d.n_flt; ++i) {
@@ -551,12 +553,12 @@ bool BCFFilteredReader::passed_vfilter(bcf_hdr_t* hdr, bcf1_t* v) {
     std::fill(acs.begin(), acs.end(), 0);
     an = 0;
 
-    //if ( rand() % 1000 == 0 ) notice("foo");        
+    //if ( rand() % 1000 == 0 ) notice("foo");
 
-    if ( !parse_genotypes(hdr,v) ) 
+    if ( !parse_genotypes(hdr,v) )
       error("[E:%s:%d %s] Cannot find the field GT from the VCF file at position %s:%d",__FILE__,__LINE__,__PRETTY_FUNCTION__, bcf_hdr_id2name(hdr, v->rid), v->pos+1);
 
-    //if ( rand() % 1000 == 0 ) notice("foo");    
+    //if ( rand() % 1000 == 0 ) notice("foo");
 
     if ( vfilt.minCallRate > (double)an/(2.0*(double)sm_icols.size()) ) return false;
 
@@ -566,11 +568,11 @@ bool BCFFilteredReader::passed_vfilter(bcf_hdr_t* hdr, bcf1_t* v) {
     //if ( rand() % 1000 ) notice("%d %d %lf",ac,an,af);
 
     //if ( rand() % 1000 == 0 ) notice("foo");
-  
+
     if ( ac < vfilt.minAC ) return false;
-    if ( ac > vfilt.maxAC ) return false;    
+    if ( ac > vfilt.maxAC ) return false;
     if ( ( ac < vfilt.minMAC ) || ( an-ac < vfilt.minMAC ) ) return false;
-    if ( ( ac > vfilt.maxMAC ) && ( an-ac > vfilt.maxMAC ) ) return false;    
+    if ( ( ac > vfilt.maxMAC ) && ( an-ac > vfilt.maxMAC ) ) return false;
     if ( af < vfilt.minAF ) return false;
     if ( ( af < vfilt.minMAF ) || ( 1.-af < vfilt.minMAF ) ) return false;
     if ( af > vfilt.maxAF ) return false;
@@ -603,10 +605,10 @@ bool BCFFilteredReader::jump_to(const char* chr, int32_t pos) {
       else if ( v->pos + v->rlen < pos ) continue;
       else return true;
     }
-    return (v != NULL); 
+    return (v != NULL);
   }
   else
-    return cdr.jump_to(chr,pos);    
+    return cdr.jump_to(chr,pos);
 }
 
 // set ploidies using sex. return true if ploidies are changed
@@ -624,7 +626,7 @@ bool BCFFilteredReader::set_ploidies_by_sex(bcf1_t* v) {
     else {
       if ( ( sex_ploidies[0] == 2 ) && ( sex_ploidies[1] == 2 ) ) return false;
       sex_ploidies[0] = 2;
-      sex_ploidies[1] = 2;      
+      sex_ploidies[1] = 2;
       memset(ploidies, (int8_t)2, (int32_t)sm_isexes.size());
       return true;
     }
@@ -635,21 +637,21 @@ bool BCFFilteredReader::set_ploidies_by_sex(bcf1_t* v) {
     sex_ploidies[1] = 1;
     for(int32_t i=0; i < (int32_t)sm_isexes.size(); ++i)
       ploidies[i] = sex_ploidies[sm_isexes[i]];
-    return true;    
+    return true;
   }
   else if ( v->rid == mtRid ) {
     if ( ( sex_ploidies[0] == 1 ) && ( sex_ploidies[1] == 1 ) ) return false;
     sex_ploidies[0] = 1;
     sex_ploidies[1] = 1;
-    memset(ploidies, (int8_t)1, (int32_t)sm_isexes.size());    
+    memset(ploidies, (int8_t)1, (int32_t)sm_isexes.size());
     return true;
   }
   else {
-    if ( ( sex_ploidies[0] == 2 ) && ( sex_ploidies[1] == 2 ) ) return false;    
+    if ( ( sex_ploidies[0] == 2 ) && ( sex_ploidies[1] == 2 ) ) return false;
     sex_ploidies[0] = 2;
-    sex_ploidies[1] = 2;      
+    sex_ploidies[1] = 2;
     memset(ploidies, (int8_t)2, (int32_t)sm_isexes.size());
-    return true;    
+    return true;
   }
 }
 
@@ -674,10 +676,10 @@ int32_t BCFFilteredReader::clear_buffer_before(const char* chr, int32_t pos1) {
   nbuf -= n_rm;
   return n_rm;
 }
-  
+
 bcf1_t* BCFFilteredReader::read() {
   n_gts = 0; n_pls = 0; n_dss = 0; n_flds = 0;
-  
+
   if ( ( unlimited_buffer ) && ( nbuf == (int32_t)vbufs.size() ) ) {
     if ( vidx + 1 == nbuf ) {
       vbufs.push_back(bcf_init());
@@ -698,9 +700,10 @@ bcf1_t* BCFFilteredReader::read() {
   }
   ++nbuf;
 
+
   if ( mode_extract ) {
     if ( variants2extract.empty() ) {
-      vidx = (vidx + vbufs.size() - 1) % vbufs.size(); 
+      vidx = (vidx + vbufs.size() - 1) % vbufs.size();
       eof = true;
       return NULL;
     }
@@ -711,7 +714,7 @@ bcf1_t* BCFFilteredReader::read() {
 
 	if ( nRead % verbose == 0 )
 	  notice("Reading %d variants, Skipping %d, Missing %d", nRead, nSkip, nMiss);
-	
+
 	if ( ( it->chrom.compare(bcf_get_chrom(cdr.hdr,vbufs[vidx])) != 0 ) || ( vbufs[vidx]->pos > it->pos ) ) {
 	  // the marker was not found;
 	  ++nMiss;
@@ -724,7 +727,7 @@ bcf1_t* BCFFilteredReader::read() {
 	std::set<variantKeyS>::iterator it2 = variants2extract.find(*it);
 	if ( it2 != variants2extract.end() ) { // found something
 	  variants2extract.erase(it2);
-	  if ( passed_vfilter() ) {
+	  if ( passed_vfilter(cdr.hdr,cursor()) ) {
 	    // set ploidies here
 	    bcf1_t* v = cursor();
 	    set_ploidies_by_sex(v);
@@ -741,31 +744,32 @@ bcf1_t* BCFFilteredReader::read() {
       ++nMiss;
       variants2extract.erase(it);
       vidx = (vidx + vbufs.size() - 1) % vbufs.size();
-      --nbuf;      
+      --nbuf;
       return read();
     }
     else {
       ++nMiss;
       variants2extract.erase(it);
       vidx = (vidx + vbufs.size() - 1) % vbufs.size();
-      --nbuf;      
+      --nbuf;
       return read();
     }
   }
   else {
     while( cdr.read(vbufs[vidx]) ) {
       ++nRead;
-      if ( nRead % verbose == 0 )
-	notice("Reading %d variants at %s:%d, Skipping %d, Missing %d.", nRead, bcf_hdr_id2name(cdr.hdr, vbufs[vidx]->rid), vbufs[vidx]->pos+1, nSkip, nMiss);      
-      if ( passed_vfilter() ) return cursor();
+      if ( nRead % verbose == 0 ) {
+	notice("Reading %d variants at %s:%d, Skipping %d, Missing %d.", nRead, bcf_hdr_id2name(cdr.hdr, vbufs[vidx]->rid), vbufs[vidx]->pos+1, nSkip, nMiss);
+      }
+      if ( passed_vfilter(cdr.hdr,cursor()) ) return cursor();
       else {
 	//vidx = (vidx + vbufs.size() - 1) % vbufs.size();
-	//--nbuf;	
+	//--nbuf;
 	++nSkip;
       }
     }
     vidx = (vidx + vbufs.size() - 1) % vbufs.size();
-    --nbuf;    
+    --nbuf;
     eof = true;
     return NULL;
   }
@@ -776,14 +780,14 @@ double BCFFilteredReader::calculate_af(bool useInfoField,
 
   if ( hdr == NULL ) hdr = cdr.hdr;
   if ( v == NULL ) v = cursor();
-  
+
   if ( useInfoField && ( (int32_t)v_sm_ids.size() == bcf_hdr_nsamples(cdr.hdr) ) ) {
     // check if AF field exist
     float* flts = NULL;
     int32_t n_flt = 0;
     if ( bcf_get_info_float(hdr, v, "AF", &flts, &n_flt) < 0 ) { // no AF
       int32_t* pacs = NULL;
-      int32_t* pans = NULL;    
+      int32_t* pans = NULL;
       int32_t n_acs = 0, n_ans = 0;
       notice("WARNING: Cannot find AF field from INFO field in VCF file, now calculate AF from AC/AN");
       if ( bcf_get_info_int32(hdr, v, "AC", &pacs, &n_acs) < 0 ) // no AC
