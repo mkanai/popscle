@@ -21,6 +21,7 @@ int32_t cmdCramDemuxlet(int32_t argc, char** argv) {
   sr.filt.minMQ = 20;
   std::vector<std::string> smIDs;
   std::vector<double> gridAlpha;
+  int32_t doublet_detect = 1;
   //std::vector<double> gridASE;
   vr.verbose = 10000;
   sr.verbose = 1000000;
@@ -62,7 +63,7 @@ int32_t cmdCramDemuxlet(int32_t argc, char** argv) {
     LONG_MULTI_DOUBLE_PARAM("alpha",&gridAlpha, "Grid of alpha to search for (default is 0.1, 0.2, 0.3, 0.4, 0.5)")
     LONG_DOUBLE_PARAM("doublet-prior",&doublet_prior, "Prior of doublet")
     LONG_INT_PARAM("sam-verbose",&sr.verbose, "Verbose message frequency for SAM/BAM/CRAM")
-    LONG_INT_PARAM("vcf-verbose",&vr.verbose, "Verbose message frequency for VCF/BCF")
+    LONG_INT_PARAM("doublet_detect",&doublet_detect, "Default is 1, set to 0 to remove doublet detection")
 
     LONG_PARAM_GROUP("Read filtering Options", NULL)
     LONG_INT_PARAM("cap-BQ", &capBQ, "Maximum base quality (higher BQ will be capped)")
@@ -84,8 +85,9 @@ int32_t cmdCramDemuxlet(int32_t argc, char** argv) {
 
   if ( gridAlpha.empty() ) {
     gridAlpha.push_back(0);
-    //gridAlpha.push_back(0.25);
-    gridAlpha.push_back(0.5);
+    if(doublet_detect) {
+      gridAlpha.push_back(0.5);
+    }
   }
 
   std::set<std::string> bcdSet;
@@ -736,44 +738,53 @@ int32_t cmdCramDemuxlet(int32_t argc, char** argv) {
       int32_t j, k, l, m, n;
 
       if ( scl.snps[isnp].gps != NULL ) { // skip if the marker does not have genotypes
-	for(j=jbeg; j < jend; ++j) {  // j is the intended sample
-	  // pairwise LLK
-	  for(k=0; k < nv; ++k) {     // k is the contaminating sample
-	    std::fill(sumPs.begin(), sumPs.end(), 0); // for computing llksAB
-	    for(l=0; l < 3; ++l) {
-	      for(m=0; m < 3; ++m) {
-		p = scl.snps[isnp].gps[j*3+l] * scl.snps[isnp].gps[k*3+m];
-		for(n=0; n < nAlpha; ++n)
-		  sumPs[n] += (p * pGs[n*9+l*3+m]); // sumP is the per-SNP likelihood
-	      }
-	    }
-	    for(n=0; n < nAlpha; ++n)
-	      llksAB[(j-jbeg)*nv*nAlpha + k*nAlpha + n] += log(sumPs[n]);
-	  }
 
-	  // // A0 LLK
-	  // std::fill(sumPs.begin(), sumPs.end(), 0); // for computing llksA0
-	  // for(l=0; l < 3; ++l) {
-	  //   for(m=0; m < 3; ++m) {
-	  //     //p = gpA0[isnp*nv*9 + j*9 + l*3 + m];
-	  //     p = gpA0[isnp][j*9 + l*3 + m];
-	  //     for(n=0; n < nAlpha; ++n)
-		// sumPs[n] += (p * pGs[n*9+l*3+m]);
-	  //   }
-	  // }
-	  // for(n=0; n < nAlpha; ++n)
-	  //   llksA0[(j-jbeg)*nAlpha + n] += log(sumPs[n]);
-	}
+  if(doublet_detect) {
+  	for(j=jbeg; j < jend; ++j) {  // j is the intended sample
+  	  // pairwise LLK
+  	  for(k=0; k < nv; ++k) {     // k is the contaminating sample
+  	    std::fill(sumPs.begin(), sumPs.end(), 0); // for computing llksAB
+  	    for(l=0; l < 3; ++l) {
+  	      for(m=0; m < 3; ++m) {
+  		        p = scl.snps[isnp].gps[j*3+l] * scl.snps[isnp].gps[k*3+m];
+  		        for(n=0; n < nAlpha; ++n)
+  		          sumPs[n] += (p * pGs[n*9+l*3+m]); // sumP is the per-SNP likelihood
+  	          }
+  	      }
+  	      for(n=0; n < nAlpha; ++n)
+  	          llksAB[(j-jbeg)*nv*nAlpha + k*nAlpha + n] += log(sumPs[n]);
+  	      }
 
-	std::fill(sumPs.begin(), sumPs.end(), 0); // for computing llks00
-	for(l=0; l < 3; ++l) {
-	  for(m=0; m < 3; ++m) {
-	    //p = gp00[isnp*9 + l*3 + m];
-	    p = gp00[isnp][l*3 + m];
-	    for(n=0; n < nAlpha; ++n)
-	      sumPs[n] += (p * pGs[n*9+l*3+m]);
-	  }
-	}
+  	  // // A0 LLK
+  	  // std::fill(sumPs.begin(), sumPs.end(), 0); // for computing llksA0
+  	  // for(l=0; l < 3; ++l) {
+  	  //   for(m=0; m < 3; ++m) {
+  	  //     //p = gpA0[isnp*nv*9 + j*9 + l*3 + m];
+  	  //     p = gpA0[isnp][j*9 + l*3 + m];
+  	  //     for(n=0; n < nAlpha; ++n)
+  		// sumPs[n] += (p * pGs[n*9+l*3+m]);
+  	  //   }
+  	  // }
+  	  // for(n=0; n < nAlpha; ++n)
+  	  //   llksA0[(j-jbeg)*nAlpha + n] += log(sumPs[n]);
+  	}
+  }
+  else {
+    for(j=jbeg; j < jend; ++j) {  // j is the intended sample
+  	  // singlet LLK
+      std::fill(sumPs.begin(), sumPs.end(), 0); // for computing llksAB
+      for(l=0; l < 3; ++l) {
+        for(m=0; m < 3; ++m) {
+          p = scl.snps[isnp].gps[j*3+l] * scl.snps[isnp].gps[0*3+m];
+          for(n=0; n < nAlpha; ++n)
+          sumPs[n] += (p * pGs[n*9+l*3+m]); // sumP is the per-SNP likelihood
+        }
+      }
+      for(n=0; n < nAlpha; ++n)
+        llksAB[(j-jbeg)*nv*nAlpha + n] += log(sumPs[n]);
+    }
+  }
+
 	for(n=0; n < nAlpha; ++n)
 	  llks00[n] += log(sumPs[n]);
       }
