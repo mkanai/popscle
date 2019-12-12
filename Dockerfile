@@ -30,9 +30,9 @@
      ./configure --prefix=/usr/local/ && \
      make && \
      make install
-  
+
 # Install popscle
- RUN git clone https://github.com/statgen/popscle.git
+ RUN git clone https://github.com/broadinstitute/popscle.git
  RUN cd popscle && \
      mkdir build && \
      cd build && \
@@ -44,4 +44,4 @@
  #CMD ["popscle"]
  COPY ./entrypoint.sh /
  RUN chmod 755 /entrypoint.sh
- ENTRYPOINT ["/entrypoint.sh"]
+ ENTRYPOINT []
