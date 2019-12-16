@@ -63,7 +63,7 @@ int32_t cmdCramDemuxlet(int32_t argc, char** argv) {
     LONG_MULTI_DOUBLE_PARAM("alpha",&gridAlpha, "Grid of alpha to search for (default is 0.1, 0.2, 0.3, 0.4, 0.5)")
     LONG_DOUBLE_PARAM("doublet-prior",&doublet_prior, "Prior of doublet")
     LONG_INT_PARAM("sam-verbose",&sr.verbose, "Verbose message frequency for SAM/BAM/CRAM")
-    LONG_INT_PARAM("doublet-detect",&doublet_detect, "Default is 1, set to 0 to remove doublet detection")
+    LONG_INT_PARAM("doublet_detect",&doublet_detect, "Default is 1, set to 0 to remove doublet detection")
 
     LONG_PARAM_GROUP("Read filtering Options", NULL)
     LONG_INT_PARAM("cap-BQ", &capBQ, "Maximum base quality (higher BQ will be capped)")
