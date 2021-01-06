@@ -13,13 +13,13 @@ int32_t cmdCramMuxPileup(int32_t argc, char** argv) {
   int32_t minBQ = 13;
   int32_t minTD = 0;
   sr.filt.exclude_flag = 0x0f04;
-  sr.filt.minMQ = 20;  
+  sr.filt.minMQ = 20;
   std::vector<std::string> smIDs;
   vr.verbose = 10000;
-  sr.verbose = 1000000;  
+  sr.verbose = 1000000;
   vr.vfilt.minMAC = 1;
   vr.vfilt.minCallRate = 0.5;
-  vr.vfilt.maxAlleles = 2;  
+  vr.vfilt.maxAlleles = 2;
   std::string groupList;
   std::string field("GT");
   int32_t minTotalReads = 0;
@@ -36,17 +36,17 @@ int32_t cmdCramMuxPileup(int32_t argc, char** argv) {
 
     LONG_PARAM_GROUP("Options for input VCF/BCF", NULL)
     LONG_STRING_PARAM("vcf",&vr.bcf_file_name, "Input VCF/BCF file, containing the AC and AN field")
-    LONG_STRING_PARAM("field",&field,"FORMAT field to extract the genotype, likelihood, or posterior from")    
+    LONG_STRING_PARAM("field",&field,"FORMAT field to extract the genotype, likelihood, or posterior from")
     LONG_INT_PARAM("min-mac",&vr.vfilt.minMAC, "Minimum minor allele frequency")
-    LONG_DOUBLE_PARAM("min-callrate",&vr.vfilt.minCallRate, "Minimum call rate")    
+    LONG_DOUBLE_PARAM("min-callrate",&vr.vfilt.minCallRate, "Minimum call rate")
     LONG_MULTI_STRING_PARAM("sm",&smIDs, "List of sample IDs to compare to (default: use all)")
-    LONG_STRING_PARAM("sm-list",&vr.sample_id_list, "File containing the list of sample IDs to compare")        
+    LONG_STRING_PARAM("sm-list",&vr.sample_id_list, "File containing the list of sample IDs to compare")
 
     LONG_PARAM_GROUP("Output Options", NULL)
     LONG_STRING_PARAM("out",&outPrefix,"Output file prefix")
     LONG_INT_PARAM("sam-verbose",&sr.verbose, "Verbose message frequency for SAM/BAM/CRAM")
     LONG_INT_PARAM("vcf-verbose",&vr.verbose, "Verbose message frequency for VCF/BCF")
-    
+
     LONG_PARAM_GROUP("Read filtering Options", NULL)
     LONG_INT_PARAM("cap-BQ", &capBQ, "Maximum base quality (higher BQ will be capped)")
     LONG_INT_PARAM("min-BQ", &minBQ, "Minimum base quality to consider (lower BQ will be skipped)")
@@ -55,7 +55,7 @@ int32_t cmdCramMuxPileup(int32_t argc, char** argv) {
     LONG_INT_PARAM("excl-flag", &sr.filt.exclude_flag, "SAM/BAM FLAGs to be excluded")
 
     LONG_PARAM_GROUP("Cell/droplet filtering options", NULL)
-    LONG_STRING_PARAM("group-list",&groupList, "List of tag readgroup/cell barcode to consider in this run. All other barcodes will be ignored. This is useful for parallelized run")    
+    LONG_STRING_PARAM("group-list",&groupList, "List of tag readgroup/cell barcode to consider in this run. All other barcodes will be ignored. This is useful for parallelized run")
     LONG_INT_PARAM("min-total", &minTotalReads, "Minimum number of total reads for a droplet/cell to be considered")
     LONG_INT_PARAM("min-uniq", &minUniqReads, "Minimum number of unique reads (determined by UMI/SNP pair) for a droplet/cell to be considered")
     LONG_INT_PARAM("min-snp", &minCoveredSNPs, "Minimum number of SNPs with coverage for a droplet/cell to be considered")
@@ -82,24 +82,24 @@ int32_t cmdCramMuxPileup(int32_t argc, char** argv) {
   vr.vfilt.maxAlleles = 2;
   sr.set_buffer_size(1);
   //sr.unlimited_buffer = true;
-  
+
   vr.init_params();
   sr.init_params();
 
   int32_t n_warning_no_gtag = 0;
-  int32_t n_warning_no_utag = 0;  
-  
+  int32_t n_warning_no_utag = 0;
+
   if ( outPrefix.empty() )
     error("[E:%s:%d %s] --out parameter is missing",__FILE__,__LINE__,__PRETTY_FUNCTION__);
 
   char gtag[2] = {0,0};
-  char utag[2] = {0,0};    
+  char utag[2] = {0,0};
 
   if ( tagGroup.empty() ) { // do nothing
   }
   else if ( tagGroup.size() == 2 ) {
     gtag[0] = tagGroup.at(0);
-    gtag[1] = tagGroup.at(1);    
+    gtag[1] = tagGroup.at(1);
   }
   else {
     error("[E:%s:%d %s] Cannot recognize group tag %s. It is suppose to be a length 2 string",__FILE__,__LINE__,__FUNCTION__,tagGroup.c_str());
@@ -109,11 +109,11 @@ int32_t cmdCramMuxPileup(int32_t argc, char** argv) {
   }
   else if ( tagUMI.size() == 2 ) {
     utag[0] = tagUMI.at(0);
-    utag[1] = tagUMI.at(1);    
+    utag[1] = tagUMI.at(1);
   }
   else {
     error("[E:%s:%d %s] Cannot recognize UMI tag %s. It is suppose to be a length 2 string",__FILE__,__LINE__,__FUNCTION__,tagUMI.c_str());
-  }    
+  }
 
   // scan VCF and CRAM simultaneously
   // read a variant first
@@ -121,11 +121,11 @@ int32_t cmdCramMuxPileup(int32_t argc, char** argv) {
   sc_dropseq_lib_t scl;
 
   std::vector<int32_t> snpids;
-  //std::vector<int32_t> cellids;  
-  
+  //std::vector<int32_t> cellids;
+
   if ( !vr.read() )
     error("[E:%s Cannot read any single variant from %s]", __PRETTY_FUNCTION__, vr.bcf_file_name.c_str());
-  
+
   if ( !vr.parse_posteriors(vr.cdr.hdr, vr.cursor(), field.c_str(), 0.01) )
     error("[E:%s] Cannot parse posterior probability at %s:%d", __PRETTY_FUNCTION__, bcf_hdr_id2name(vr.cdr.hdr,vr.cursor()->rid), vr.cursor()->pos+1);
 
@@ -154,13 +154,13 @@ int32_t cmdCramMuxPileup(int32_t argc, char** argv) {
     }
   }
 
-  if ( rid2tids.empty() || tid2rids.empty() || ( rid2tids.size() != tid2rids.size() ) ) {
-    error("[E:%s] Your VCF/BCF files and SAM/BAM/CRAM files does not have any matching chromosomes, or some chromosome names are duplicated");
-  }
-  
+  //if ( rid2tids.empty() || tid2rids.empty() || ( rid2tids.size() != tid2rids.size() ) ) {
+  //  error("[E:%s] Your VCF/BCF files and SAM/BAM/CRAM files does not have any matching chromosomes, or some chromosome names are duplicated");
+  //}
+
   int32_t nv = vr.get_nsamples();
   double* gps = new double[nv*3];
-  for(int32_t i=0; i < nv * 3; ++i) 
+  for(int32_t i=0; i < nv * 3; ++i)
     gps[i] = vr.get_posterior_at(i);
   int32_t snpid = scl.add_snp( vr.cursor()->rid, vr.cursor()->pos+1, vr.cursor()->d.allele[0][0], vr.cursor()->d.allele[1][0], vr.get_af(1), gps);
   snpids.push_back(snpid);
@@ -172,7 +172,7 @@ int32_t cmdCramMuxPileup(int32_t argc, char** argv) {
   kstring_t readqual = {0,0,0};
 
   int32_t nReadsMultiSNPs = 0, nReadsSkipBCD = 0, nReadsPass = 0, nReadsRedundant = 0, nReadsN = 0, nReadsLQ = 0, nReadsTMP = 0;
-    
+
   while( sr.read() ) { // read SAM file
     int32_t endpos = bam_endpos(sr.cursor());
     int32_t tid2rid = bcf_hdr_name2id(vr.cdr.hdr, bam_get_chrom(sr.hdr, sr.cursor()));
@@ -191,7 +191,7 @@ int32_t cmdCramMuxPileup(int32_t argc, char** argv) {
       if ( vr.read() ) {
 	if ( !vr.parse_posteriors(vr.cdr.hdr, vr.cursor(), field.c_str(), 0.01) )
 	  error("[E:%s] Cannot parse posterior probability at %s:%d", __PRETTY_FUNCTION__, bcf_hdr_id2name(vr.cdr.hdr,vr.cursor()->rid), vr.cursor()->pos+1);
-	
+
 	gps = new double[nv*3];
 	for(int32_t i=0; i < nv * 3; ++i) {
 	  gps[i] = vr.get_posterior_at(i);
@@ -222,9 +222,9 @@ int32_t cmdCramMuxPileup(int32_t argc, char** argv) {
 	else if ( n_warning_no_gtag == 10 ) {
 	  notice("WARNING: Suppressing 10+ missing Droplet/Cell tag warnings...");
 	}
-	++n_warning_no_gtag;	
+	++n_warning_no_gtag;
       }
-      
+
       if ( bcdSet.empty() || ( bcdSet.find(sbcd) != bcdSet.end() ) ) {
 	ibcd = scl.add_cell(sbcd);
       }
@@ -242,7 +242,7 @@ int32_t cmdCramMuxPileup(int32_t argc, char** argv) {
       catprintf(sumi,"%x",rand()); // give a random UMI
     }
     else {
-      uint8_t *umi = (*utag) ? (uint8_t*) bam_aux_get(sr.cursor(), utag) : NULL;      
+      uint8_t *umi = (*utag) ? (uint8_t*) bam_aux_get(sr.cursor(), utag) : NULL;
       if ( ( umi != NULL ) && ( *umi == 'Z' ) ) {
 	sumi = bam_aux2Z(umi);
       }
@@ -258,8 +258,8 @@ int32_t cmdCramMuxPileup(int32_t argc, char** argv) {
       }
     }
 
-    ++scl.cell_totl_reads[ibcd];    
-    
+    ++scl.cell_totl_reads[ibcd];
+
     // genotype all reads together
     int32_t nv_pass = 0;
     int32_t nv_redundant = 0;
@@ -268,12 +268,12 @@ int32_t cmdCramMuxPileup(int32_t argc, char** argv) {
 
     //if ( rand() % 10000 == 0 )
     //notice("Reading between %s:%d-%d at %s:%d to %d i=beg=%d, nbuf=%d, vidx=%d, size=%u prevpos=%d", bam_get_chrom(sr.hdr, sr.cursor()), sr.cursor()->core.pos+1, bam_endpos(sr.cursor()), bcf_hdr_id2name(vr.cdr.hdr, scl.snps[ibeg].rid), scl.snps[ibeg].pos, scl.snps[ibeg+vr.nbuf-1].pos, ibeg, vr.nbuf, vr.vidx, vr.vbufs.size(), scl.snps[ibeg-1].pos);
-    
+
     for(int32_t i=ibeg; i < ibeg+vr.nbuf; ++i) {
       bam1_t* b = sr.cursor();
       bam_get_base_and_qual_and_read_and_qual(b, (uint32_t)scl.snps[i].pos-1, base, qual, rpos, &readseq, &readqual);
       if ( rpos == BAM_READ_INDEX_NA ) {
-	//if ( rand() % 1000 == 0 ) 
+	//if ( rand() % 1000 == 0 )
 	//notice("Cannot find any informative read between %s:%d-%d at %s:%d", bam_get_chrom(sr.hdr, b), b->core.pos+1, bam_endpos(b), bcf_hdr_id2name(vr.cdr.hdr, scl.snps[i].rid), scl.snps[i].pos);
 	continue;
       }
@@ -301,21 +301,21 @@ int32_t cmdCramMuxPileup(int32_t argc, char** argv) {
     else ++nReadsN;
   }
 
-  if ( n_warning_no_utag > 10 ) 
+  if ( n_warning_no_utag > 10 )
     notice("WARNING: Suppressed a total of %d UMI warnings...", n_warning_no_utag);
-    
-  if ( n_warning_no_gtag > 10 ) 
+
+  if ( n_warning_no_gtag > 10 )
     notice("WARNING: Suppressed a total of %d droplet/cell barcode warnings...", n_warning_no_gtag);
-  
+
   notice("Finished reading %d markers from the VCF file", (int32_t)snpids.size());
 
   //notice("Finished processing %d reads across %d variants across %d barcodes", nReadsPass, (int32_t)v_poss.size(), (int32_t)bcMap.size(), (int32_t)bcMap.size());
   notice("Total number input reads : %d", sr.n_read);
   notice("Total number of read-QC-passed reads : %d ", sr.n_read - sr.n_skip); //, nReadsN + nReadsUnique + nReadsLQ + nReadsPass);
   notice("Total number of skipped reads with ignored barcodes : %d", nReadsSkipBCD);
-  notice("Total number of non-skipped reads with considered barcodes : %d", nReadsTMP);  
+  notice("Total number of non-skipped reads with considered barcodes : %d", nReadsTMP);
   notice("Total number of gapped/noninformative reads : %d", nReadsN);
-  notice("Total number of base-QC-failed reads : %d", nReadsLQ);  
+  notice("Total number of base-QC-failed reads : %d", nReadsLQ);
   notice("Total number of redundant reads : %d", nReadsRedundant);
   notice("Total number of pass-filtered reads : %d", nReadsPass);
   notice("Total number of pass-filtered reads overlapping with multiple SNPs : %d", nReadsMultiSNPs);
@@ -345,26 +345,26 @@ int32_t cmdCramMuxPileup(int32_t argc, char** argv) {
     error("[E:%s snpids.size() = %u != scl.nsnps = %d",__PRETTY_FUNCTION__, snpids.size(), scl.nsnps);
 
   // Calculate average genotype probability
-  double* gp0s = (double*) calloc(scl.nsnps * 3, sizeof(double)); 
+  double* gp0s = (double*) calloc(scl.nsnps * 3, sizeof(double));
   for(int32_t i=0; i < scl.nsnps; ++i) {
     for(int32_t j=0; j < nv; ++j) {
       gp0s[i*3] += scl.snps[i].gps[3*j];
       gp0s[i*3+1] += scl.snps[i].gps[3*j+1];
-      gp0s[i*3+2] += scl.snps[i].gps[3*j+2];      
+      gp0s[i*3+2] += scl.snps[i].gps[3*j+2];
     }
     gp0s[i*3] /= nv;
     gp0s[i*3+1] /= nv;
-    gp0s[i*3+2] /= nv;    
+    gp0s[i*3+2] /= nv;
   }
 
   std::map<int64_t, size_t> snpcell2idx;
-  std::map<int64_t, size_t> cellsnp2idx;  
+  std::map<int64_t, size_t> cellsnp2idx;
   //std::vector<double> gls;
 
   htsFile* wC = hts_open((outPrefix+".cel.gz").c_str(),"wg");
   htsFile* wV = hts_open((outPrefix+".var.gz").c_str(),"wg");
-  htsFile* wP = hts_open((outPrefix+".plp.gz").c_str(),"wg");  
-  
+  htsFile* wP = hts_open((outPrefix+".plp.gz").c_str(),"wg");
+
   if ( ( wC == NULL ) || ( wV == NULL ) || ( wP == NULL ) )
     error("[E:%s:%d %s] Cannot create %s.* file",__FILE__,__LINE__,__FUNCTION__,outPrefix.c_str());
 
@@ -388,9 +388,9 @@ int32_t cmdCramMuxPileup(int32_t argc, char** argv) {
   int32_t i;
   //double tmp;
   //for(i=0, k=0; i < scl.nsnps; ++i) {
-  for(i=0; i < scl.nsnps; ++i) {    
+  for(i=0; i < scl.nsnps; ++i) {
     hprintf(wV, "%d\t%s\t%d\t%c\t%c\t%.5lf\n", i, rchroms[scl.snps[i].rid].c_str(), scl.snps[i].pos, scl.snps[i].ref, scl.snps[i].alt, 0.5*gp0s[i*3+1] + gp0s[i*3+2]);
-    
+
     std::map<int32_t,sc_snp_droplet_t*>& cells = scl.snp_umis[i];
     if ( cells.empty() ) continue;
     std::map<int32_t,sc_snp_droplet_t*>::iterator it;
@@ -411,10 +411,10 @@ int32_t cmdCramMuxPileup(int32_t argc, char** argv) {
       hprintf(wP, "%d\t%d\t%s\t%s\n", it->first, i, s_als.c_str(), s_bqs.c_str());
     }
   }
- 
+
   notice("Finished builing indices for sparse matrix");
   hts_close(wP);
-  hts_close(wV);  
-  
+  hts_close(wV);
+
   return 0;
 }
