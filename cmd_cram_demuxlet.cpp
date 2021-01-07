@@ -190,7 +190,7 @@ int32_t cmdCramDemuxlet(int32_t argc, char** argv) {
       if ( rid >= 0 ) {
 	if ( prevrid >= rid ) {
 	  const char* prevchrom = bcf_hdr_id2name(vr.cdr.hdr, prevrid);
-	  error("[E:%s] Your VCF/BCF files and SAM/BAM/CRAM files have different ordering of chromosomes. SAM/BAM/CRAM file has %s before %s, but VCF/BCF file has %s after %s", __PRETTY_FUNCTION__, prevchrom, chrom, prevchrom, chrom);
+	  //error("[E:%s] Your VCF/BCF files and SAM/BAM/CRAM files have different ordering of chromosomes. SAM/BAM/CRAM file has %s before %s, but VCF/BCF file has %s after %s", __PRETTY_FUNCTION__, prevchrom, chrom, prevchrom, chrom);
 	}
 	rid2tids[rid] = i;
 	tid2rids[i] = rid;
@@ -198,10 +198,9 @@ int32_t cmdCramDemuxlet(int32_t argc, char** argv) {
       }
     }
 
-    //if ( rid2tids.empty() || tid2rids.empty() || ( rid2tids.size() != tid2rids.size() ) ) {
-    //if ( rid2tids.empty() || tid2rids.empty() ) {
-    //  error("[E:%s] Your VCF/BCF files and SAM/BAM/CRAM files does not have any matching chromosomes, or some chromosome names are duplicated");
-    //}
+    if ( rid2tids.empty() || tid2rids.empty() ) {
+      error("[E:%s] Your VCF/BCF files and SAM/BAM/CRAM files does not have any matching chromosomes, or some chromosome names are duplicated");
+    }
 
     //nv = vr.get_nsamples();
     gps = new double[nv*3];

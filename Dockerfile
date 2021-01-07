@@ -25,6 +25,7 @@
 
  RUN git clone https://github.com/samtools/htslib.git
  RUN cd htslib && \
+     git checkout fd0f89554459b78c07303e2c8a42acacd6851b46 && \
      autoheader && \
      autoconf && \
      ./configure --prefix=/usr/local/ && \

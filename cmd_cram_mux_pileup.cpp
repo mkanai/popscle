@@ -154,9 +154,9 @@ int32_t cmdCramMuxPileup(int32_t argc, char** argv) {
     }
   }
 
-  //if ( rid2tids.empty() || tid2rids.empty() || ( rid2tids.size() != tid2rids.size() ) ) {
-  //  error("[E:%s] Your VCF/BCF files and SAM/BAM/CRAM files does not have any matching chromosomes, or some chromosome names are duplicated");
-  //}
+  if ( rid2tids.empty() || tid2rids.empty() ) {
+    error("[E:%s] Your VCF/BCF files and SAM/BAM/CRAM files does not have any matching chromosomes, or some chromosome names are duplicated");
+  }
 
   int32_t nv = vr.get_nsamples();
   double* gps = new double[nv*3];
