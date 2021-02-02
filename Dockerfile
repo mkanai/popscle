@@ -27,6 +27,7 @@
  RUN cd htslib && \
      autoheader && \
      autoconf && \
+     git submodule update --init --recursive && \
      ./configure --prefix=/usr/local/ && \
      make && \
      make install
