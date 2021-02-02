@@ -135,11 +135,7 @@ void SAMOrderedWriter::write(bam1_t *v)
 
                 if (i==buffer.end())
                 {
-<<<<<<< HEAD
-                    int64_t cutoff_pos1 = bam_get_pos1(buffer.front())-window; //fixed compile issue
-=======
 		  int32_t cutoff_pos1 =  std::max(bam_get_pos1(buffer.front())-window,static_cast<hts_pos_t>(1));
->>>>>>> upstream/master
                     if (bam_get_pos1(v)<cutoff_pos1)
                     {
 		      notice("[%s:%d %s] Might not be sorted for window size %d at current record %s:%d < %d (%d [last record] - %d), please increase window size to at least %d.\n", __FILE__,__LINE__,__FUNCTION__, window, bam_get_chrom(hdr, v), bam_get_pos1(v), cutoff_pos1, bam_get_pos1(buffer.front()), window, bam_get_pos1(buffer.front())-bam_get_pos1(v)+1);
